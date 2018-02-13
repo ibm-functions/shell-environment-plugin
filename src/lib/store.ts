@@ -1,0 +1,119 @@
+/*
+ * Copyright 2018 IBM Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import * as dbgc from 'debug';
+const debug = dbgc('env:store');
+
+// --- Environment store
+
+export interface IEnvironment {
+    // Environment name
+    name: string;
+
+    // whether the assets in this environment are readonly
+    readonly: boolean;
+
+    // List of promoted environments */
+    promote?: string[];
+
+    // Cached environment variables
+    variables: { [key: string]: string };
+
+    // Backend store
+    store: IVariableStore;
+
+    // TODO: deployments?
+}
+
+export interface IEnvironments { [key: string]: IEnvironment; }
+
+const envkey = 'wsk.env';
+const envcurrentkey = 'wsk.env.current';
+
+export function newEnvironment(name: string, store: StoreKind): IEnvironment {
+    const envs = getEnvironments();
+    if (envs[name])
+        throw new Error(`environment ${name} already exists`);
+
+    envs[name] = { name, readonly: false, store: newStore(store), variables: {} };
+    setEnvironments(envs);
+    return envs[name];
+}
+
+export function getEnvironments(): IEnvironments {
+    return JSON.parse(localStorage.getItem(envkey) || '{}');
+}
+
+export function setEnvironments(envs: IEnvironments) {
+    localStorage.setItem(envkey, JSON.stringify(envs));
+}
+
+export function getCurrentEnvironment(): IEnvironment {
+    const name = localStorage.getItem(envcurrentkey);
+    if (name) {
+        const env = getEnvironments();
+        return env[name];
+    }
+    return null;
+}
+
+export function setCurrentEnvironment(envname: string) {
+    const name = localStorage.setItem(envcurrentkey, envname);
+}
+
+// --- Generic variable persistence store
+
+export enum StoreKind { LOCAL }
+
+export interface IVariableStore {
+    /* Get all environment variables */
+    getVariableNames(): Array<string>;
+
+    /* Set variable value  */
+    setValue(name: string, value: string);
+
+    /* Get variable value  */
+    getValue(name: string): string;
+}
+
+/* Create new store of the given kind */
+export function newStore(kind: StoreKind): IVariableStore {
+    switch (kind) {
+        case StoreKind.LOCAL:
+            return newLocalStore();
+        default:
+            throw new Error(`invalid store kind: ${kind}`);
+    }
+}
+
+// --- Local Store
+class LocalStore implements IVariableStore {
+    variables: { [key: string]: string } = {};
+
+    getVariableNames(): string[] {
+        return Object.keys(this.variables);
+    }
+    setValue(name: string, value: string) {
+        this.variables[name] = value;
+    }
+    getValue(name: string): string {
+        return this.variables[name];
+    }
+}
+
+export function newLocalStore() {
+    return new LocalStore();
+}
