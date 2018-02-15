@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 IBM Corporation
+ * Copyright 2017 IBM Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,11 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export const docEnv = 'Commands related to environments';
-export const docNew = 'Create a new environment';
-export const docShow = 'Show information about the current environment';
-export const docList = 'List environments';
-export const docSet = 'Set the current environment';
-export const docVar = 'Commands related to environment variables';
-export const docVarSet = 'Set the value of a variable in the current environment';
-export const docVarList = 'List environment variables';
+import * as docs from './docs';
+
+const usage = `${docs.docVar}
+\tvar set                          [ ${docs.docVarSet} ]
+\tvar list                         [ ${docs.docVarList} ]`;
+
+const doVar = async (_1, _2, _3, modules, _4, _5, _6, argv) => {
+    throw new modules.errors.usage(usage);
+};
+
+module.exports = (commandTree, prequire) => {
+    commandTree.listen('/env/var', doVar, { docs: docs.docVar });
+
+    require('./env-var-set')(commandTree, prequire);
+    require('./env-var-list')(commandTree, prequire);
+};

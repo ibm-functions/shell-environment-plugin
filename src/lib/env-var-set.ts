@@ -13,22 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { docSet } from './docs';
+import { docVarSet } from './docs';
 import { sliceCmd, error } from './cli';
-import { getEnvironments, setCurrentEnvironment } from './store';
+import { updateEnvironment, getCurrentEnvironment } from './store';
 
-declare const repl: any;
+const usage = `${docVarSet}
 
-let wsk;
+\tvar set <variable_name> <variable_value>`;
 
-const usage = `${docSet}
-
-\tenv set <env>
-
-Required parameters:
-\tenv            the environment name (e.g. dev, prod)`;
-
-const doSet = async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
+const doVarSet = async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
     if (argv.help)
         throw new errors.usage(usage);
 
@@ -36,17 +29,22 @@ const doSet = async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
 
     const name = argv._.shift();
     if (!name)
-        throw new errors.usage(`expected environment name.\n\n${usage}`);
+        error(errors, 'missing variable name', usage);
 
-    const envs = getEnvironments();
-    if (!envs[name])
-        error(errors, `environment ${name} does not exist`);
+    const value = argv._.shift();
+    if (!value)
+        error(errors, 'missing variable value', usage);
 
-    setCurrentEnvironment(name);
+    const env = getCurrentEnvironment();
+    if (!env)
+        error(errors, 'current environment not set');
 
+    env.variables = env.variables || {};
+    env.variables[name] = value;
+    updateEnvironment(env);
     return true;
 };
 
 module.exports = (commandTree, require) => {
-    commandTree.listen('/env/set', doSet, { docs: docSet });
+    commandTree.listen('/env/var/set', doVarSet, { docs: docVarSet });
 };

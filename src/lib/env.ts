@@ -19,12 +19,15 @@ const usage = `${docs.docEnv}
 \tenv new                          [ ${docs.docNew} ]
 \tenv set                          [ ${docs.docSet} ]
 \tenv show                         [ ${docs.docShow} ]
-\tenv list                         [ ${docs.docList} ]`;
+\tenv list                         [ ${docs.docList} ]
+\tenv var                          [ ${docs.docVar} ]`;
 
 const doEnv = async (_1, _2, _3, modules, _4, _5, _6, argv) => {
     throw new modules.errors.usage(usage);
 };
 
-module.exports = (commandTree, require) => {
+module.exports = (commandTree, prequire) => {
     commandTree.listen('/env', doEnv, { docs: docs.docEnv });
+
+    require('./env-var')(commandTree, prequire);
 };

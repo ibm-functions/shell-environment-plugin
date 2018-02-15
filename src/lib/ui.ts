@@ -13,22 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { getCurrentEnvironment } from './store';
 
-// async function updateShell(config) {
-//     if (typeof document === 'undefined') return;
-
-//     const wskprops = await env.getCurrent(config);
-//     if (wskprops) {
-//         await repl.qexec(`host set ${wskprops.APIHOST}`);
-//         await repl.qexec(`auth add ${wskprops.AUTH}`);
-//     }
-// }
-
-// // preloading hook.
-// async function init(commandTree, prequire) {
-//     wsk = prequire('/ui/commands/openwhisk-core');
-
-//     const cfg = wskd.init.newConfig(null);
-//     await wskd.init.init(cfg);
-//     updateShell(cfg); // async
-// }
+export function syncEnvName() {
+    const nameElem = document.getElementById('openwhisk-namespace');
+    const env = getCurrentEnvironment() || { name: 'no environment' };
+    nameElem.childNodes[0].textContent = env.name;
+}

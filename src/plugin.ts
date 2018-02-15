@@ -13,10 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { syncEnvName } from './lib/ui';
+import { getCurrentEnvironment } from './lib/store';
+
+// preloading hook.
+function init(commandTree, prequire) {
+    if (typeof document === 'undefined') return;
+
+    const ns = document.getElementById('openwhisk-namespace');
+    if (ns) {
+        ns.setAttribute('title', 'Your environment name and deployment version. Click to change to another environment');
+        ns.setAttribute('onclick', 'repl.partial("env set <your_env_name>")');
+    }
+
+    syncEnvName();
+}
+
 module.exports = (commandTree, prequire) => {
     require('./lib/env')(commandTree, prequire);
     require('./lib/env-list')(commandTree, prequire);
     require('./lib/env-set')(commandTree, prequire);
     require('./lib/env-show')(commandTree, prequire);
     require('./lib/env-new')(commandTree, prequire);
+
+    init(commandTree, prequire);
+
+    return {
+        current: getCurrentEnvironment
+    };
 };

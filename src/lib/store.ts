@@ -13,9 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { EventEmitter } from 'events';
+import { error } from './cli';
 
 import * as dbgc from 'debug';
 const debug = dbgc('env:store');
+
+declare const eventBus: EventEmitter;
 
 // --- Environment store
 
@@ -70,8 +74,24 @@ export function getCurrentEnvironment(): IEnvironment {
     return null;
 }
 
+export function getCurrentEnvironmentOrError(errors): IEnvironment {
+    const name = localStorage.getItem(envcurrentkey);
+    if (name) {
+        const env = getEnvironments();
+        return env[name];
+    }
+    error(error, 'no environment set');
+}
+
+export function updateEnvironment(env: IEnvironment) {
+    const envs = getEnvironments();
+    envs[env.name] = env;
+    setEnvironments(envs);
+}
+
 export function setCurrentEnvironment(envname: string) {
-    const name = localStorage.setItem(envcurrentkey, envname);
+    localStorage.setItem(envcurrentkey, envname);
+    eventBus.emit('/env/set', { name: envname });
 }
 
 // --- Generic variable persistence store

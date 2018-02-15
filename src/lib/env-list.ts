@@ -35,7 +35,7 @@ function formatForShell(envs: IEnvironments) {
         const v = envs[k];
         return { name: v.name, type: 'env', attributes: [
             {
-                value: document.createTextNode(v.readonly ? 'readonly' : 'readwrite'),
+                value: document.createTextNode(v.readonly ? 'read-only' : 'read-write'),
                 css: 'green-text'
             }]
         };
