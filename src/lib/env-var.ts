@@ -16,8 +16,8 @@
 import * as docs from './docs';
 
 const usage = `${docs.docVar}
-\tvar set                          [ ${docs.docVarSet} ]
-\tvar list                         [ ${docs.docVarList} ]`;
+\tenv var set                      [ ${docs.docVarSet} ]
+\tenv var list                     [ ${docs.docVarList} ]`;
 
 const doVar = async (_1, _2, _3, modules, _4, _5, _6, argv) => {
     throw new modules.errors.usage(usage);

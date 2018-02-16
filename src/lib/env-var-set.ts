@@ -19,7 +19,7 @@ import { updateEnvironment, getCurrentEnvironment } from './store';
 
 const usage = `${docVarSet}
 
-\tvar set <variable_name> <variable_value>`;
+\tenv var set <variable_name> <variable_value>`;
 
 const doVarSet = async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
     if (argv.help)
