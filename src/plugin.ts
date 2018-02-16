@@ -15,6 +15,7 @@
  */
 import { syncEnvName } from './lib/ui';
 import { getCurrentEnvironment } from './lib/store';
+import { setEnvironment } from './lib/cli';
 
 // preloading hook.
 function init(commandTree, prequire) {
@@ -26,7 +27,15 @@ function init(commandTree, prequire) {
         ns.setAttribute('onclick', 'repl.partial("env set <your_env_name>")');
     }
 
-    syncEnvName();
+    // syncEnvName();
+    const current = getCurrentEnvironment();
+    if (current && current.name) {
+        try {
+            setEnvironment(current.name, prequire);
+        } catch (e) {
+            throw e;
+        }
+    }
 }
 
 module.exports = (commandTree, prequire) => {

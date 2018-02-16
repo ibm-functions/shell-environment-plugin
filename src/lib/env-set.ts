@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 import { docSet } from './docs';
-import { sliceCmd, error } from './cli';
+import { sliceCmd, error, setEnvironment } from './cli';
 import { getEnvironments, setCurrentEnvironment, getCurrentEnvironment } from './store';
 import { syncEnvName } from './ui';
 import { prepareWskprops, ErrorMissingVariable } from './bluemix';
-
-declare const repl: any;
 
 let wsk;
 
@@ -48,32 +46,14 @@ const doSet = prequire => async (_1, _2, _3, { ui, errors }, _4, _5, _6, argv) =
     if (currentEnv && currentEnv.name === name)
         return true;
 
-    setCurrentEnvironment(name);
-    syncEnvName();
-
-    let project;
     try {
-        project = prequire('shell-project-plugin');
-    } catch (e) {
-        // no project, fine
-    }
-
-    // update wskprops.
-    try {
-        let projname;
-        if (project) {
-            const cproj = project.current();
-            projname = cproj ? cproj.name : null;
-        }
-        const wsk = prequire('/ui/commands/openwhisk-core');
-        await prepareWskprops(wsk, ui.userDataDir(), envs[name], projname);
+        await setEnvironment(name, prequire);
+        return true;
     } catch (e) {
         if (e instanceof ErrorMissingVariable)
             return errorMissingVar(e.name);
         throw e;
     }
-
-    return true;
 };
 
 function errorMissingVar(name: string) {

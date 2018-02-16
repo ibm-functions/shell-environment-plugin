@@ -81,7 +81,7 @@ export class ErrorMissingVariable extends Error {
 }
 
 // Update .wskprops based on current environment. Return the location of .wskprops to be used by wskdeploy
-export async function prepareWskprops(wsk, userDataDir: string, env: IEnvironment, projectname: string): Promise<string> {
+export async function prepareWskprops(wsk, userDataDir: string, env: IEnvironment, projectname: string | null): Promise<string> {
     const vars = env.variables || {};
 
     // Check for mandatory env vars
