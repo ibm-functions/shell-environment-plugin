@@ -16,6 +16,8 @@
 import { docSet } from './docs';
 import { sliceCmd, error } from './cli';
 import { getEnvironments, setCurrentEnvironment } from './store';
+import { syncEnvName } from './ui';
+import { prepareWskprops, ErrorMissingVariable } from './bluemix';
 
 declare const repl: any;
 
@@ -28,7 +30,7 @@ const usage = `${docSet}
 Required parameters:
 \tenv            the environment name (e.g. dev, prod)`;
 
-const doSet = async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
+const doSet = prequire => async (_1, _2, _3, { ui, errors }, _4, _5, _6, argv) => {
     if (argv.help)
         throw new errors.usage(usage);
 
@@ -43,10 +45,39 @@ const doSet = async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
         error(errors, `environment ${name} does not exist`);
 
     setCurrentEnvironment(name);
+    syncEnvName();
+
+    let project;
+    try {
+        project = prequire('shell-project-plugin');
+    } catch (e) {
+        // no project, fine
+    }
+
+    // update wskprops.
+    try {
+        let projname;
+        if (project) {
+            const cproj = project.current();
+            projname = cproj ? cproj.name : null;
+        }
+        const wsk = prequire('/ui/commands/openwhisk-core');
+        await prepareWskprops(wsk, ui.userDataDir(), envs[name], projname);
+    } catch (e) {
+        if (e instanceof ErrorMissingVariable)
+            return errorMissingVar(e.name);
+        throw e;
+    }
 
     return true;
 };
 
-module.exports = (commandTree, require) => {
-    commandTree.listen('/env/set', doSet, { docs: docSet });
+function errorMissingVar(name: string) {
+    const div = document.createElement('div');
+    div.innerHTML = `<span>missing ${name} in the list of environment variables. Please use <span class='clickable' onclick='repl.partial("env var set ${name} <variable_value&gt;")'>env var set ${name} &lt;variable_value&gt;</span> to set it</span>`;
+    return div;
+}
+
+module.exports = (commandTree, prequire) => {
+    commandTree.listen('/env/set', doSet(prequire), { docs: docSet });
 };

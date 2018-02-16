@@ -40,7 +40,7 @@ const doVarSet = async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
         error(errors, 'current environment not set');
 
     env.variables = env.variables || {};
-    env.variables[name] = value;
+    env.variables[name] = { value };
     updateEnvironment(env);
     return true;
 };

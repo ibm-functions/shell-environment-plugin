@@ -23,6 +23,21 @@ declare const eventBus: EventEmitter;
 
 // --- Environment store
 
+export interface IVariable {
+    // Variable name
+    name?: string;
+
+    // Variable value
+    value: string;
+
+    // Computed or userdefined?
+    iscomputed?: boolean;
+
+    // secret?
+    issecret?: boolean;
+
+}
+
 export interface IEnvironment {
     // Environment name
     name: string;
@@ -34,7 +49,7 @@ export interface IEnvironment {
     promote?: string[];
 
     // Cached environment variables
-    variables: { [key: string]: string };
+    variables: { [key: string]: IVariable };
 
     // Backend store
     store: IVariableStore;
@@ -102,11 +117,11 @@ export interface IVariableStore {
     /* Get all environment variables */
     getVariableNames(): Array<string>;
 
-    /* Set variable value  */
-    setValue(name: string, value: string);
+    /* Set variable value */
+    setValue(name: string, value: IVariable);
 
     /* Get variable value  */
-    getValue(name: string): string;
+    getValue(name: string): IVariable;
 }
 
 /* Create new store of the given kind */
@@ -121,15 +136,18 @@ export function newStore(kind: StoreKind): IVariableStore {
 
 // --- Local Store
 class LocalStore implements IVariableStore {
-    variables: { [key: string]: string } = {};
+    variables: { [key: string]: IVariable } = {};
 
     getVariableNames(): string[] {
         return Object.keys(this.variables);
     }
-    setValue(name: string, value: string) {
+
+    setValue(name: string, value: IVariable) {
+        value.name = name;
         this.variables[name] = value;
     }
-    getValue(name: string): string {
+
+    getValue(name: string): IVariable {
         return this.variables[name];
     }
 }

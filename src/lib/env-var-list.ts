@@ -38,7 +38,7 @@ function formatForShell(env: IEnvironment) {
         return {
             name: k, type: 'var', attributes: [
                 {
-                    value: document.createTextNode(v),
+                    value: document.createTextNode(v.issecret ? '[secret]' : v.value),
                     css: 'green-text'
                 }]
         };

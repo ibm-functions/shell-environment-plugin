@@ -36,7 +36,7 @@ const doShow = async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
 
 function formatForShell(env: IEnvironment) {
     const variables = env.variables;
-    if (variables) {
+    if (variables && Object.keys(variables).length > 0) {
         return Object.keys(variables).map(name => {
             const v = variables[name];
             return {
@@ -44,7 +44,7 @@ function formatForShell(env: IEnvironment) {
                 type: 'variable',
                 attributes: [
                     {
-                        value: document.createTextNode(v),
+                        value: document.createTextNode(v.value),
                         css: ''
                     }]
             };
