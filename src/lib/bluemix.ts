@@ -141,7 +141,8 @@ async function doRun(cred: ICredential, cmd: string) {
     const bx = `WSK_CONFIG_FILE="${wskProps(cred)}" BLUEMIX_HOME="${cred.home}" bx ${cmd}`;
     debug(`exec ${bx}`);
     const result = await exec(bx);
-    debug(`result: ${result}`);
+    debug(`stdout: ${JSON.stringify(result.stdout)}`);
+    debug(`stderr ${JSON.stringify(result.stderr)}`);
     return result;
 }
 
@@ -233,6 +234,7 @@ export async function ensureSpaceExists(cred: ICredential) {
     const subcred = { ...cred };
     delete subcred.space;
     await run(subcred, `account space-create ${cred.space}`); // fast when already exists
+    await run(cred, `target -s ${cred.space}`);
 
     await installWskPlugin(cred);
     await refreshWskProps(cred, 30); // refresh .wskprops

@@ -15,7 +15,7 @@
  */
 import { docSet } from './docs';
 import { sliceCmd, error } from './cli';
-import { getEnvironments, setCurrentEnvironment } from './store';
+import { getEnvironments, setCurrentEnvironment, getCurrentEnvironment } from './store';
 import { syncEnvName } from './ui';
 import { prepareWskprops, ErrorMissingVariable } from './bluemix';
 
@@ -43,6 +43,10 @@ const doSet = prequire => async (_1, _2, _3, { ui, errors }, _4, _5, _6, argv) =
     const envs = getEnvironments();
     if (!envs[name])
         error(errors, `environment ${name} does not exist`);
+
+    const currentEnv = getCurrentEnvironment();
+    if (currentEnv && currentEnv.name === name)
+        return true;
 
     setCurrentEnvironment(name);
     syncEnvName();
