@@ -1,4 +1,4 @@
-This plugin helps you manage multiple deployment environments.
+This plugin helps you manage multiple environments for deploying cloud assets such as cloud functions.
 
 ## ⚙ Getting started
 
@@ -35,86 +35,39 @@ fsh env var list                     [ List environment variables ]
 ...
 ```
 
-### Creating new environment
+## Defining a new environment
 
-You can create new environment for your project by using the `env new` command.
+To create a new environment, call `env new <name>` and configure it by setting the value of the mandatory environment variables:
 
-```
-$ fsh env new <env>
-```
+- `BLUEMIX_API_KEY`: the IBM Cloud platform API key for accessing your account
+- `BLUEMIX_ENDPOINT`: the IBM Cloud endpoint where to deploy assets
+- `BLUEMIX_ORG`: the IBM cloud organization where to deploy assets
+- `BLUEMIX_SPACE`: the IBM Cloud space where to deploy assets. This is automatically computed when you are using `shell-project-plugin`.
 
-This creates an environment named `env`.
-
-### Listing environments
-
-You can use the command `env list` to print a summary of available environments.
+As an example, you can set the IBM Cloud endpoint like this
 
 ```
-$ fsh env list
+env var set BLUEMIX_ENDPOINT api.ng.bluemix.net
 ```
 
-### Setting the current environment
-
-```
-$ fsh env set <env>
-```
-
-### Getting information about the current environment
-
-To get details about the current environment, use the command `env show`.
-
-```
-$ fsh env show
-```
-
-### Getting information about the current environment
-
-To get details about the current environment, use the command `env show`.
-
-```
-$ fsh env show
-```
-
-### Setting an environment variable value
-
-Use the following command to set or add a variable in the current environment:
-
-```
-$ fsh env var set <var> <value>
-```
-
-Currently environment variables are persisted within the IBM Cloud Shell.
-
-### Listing all environment variables
-
-```
-$ fsh env var list
-```
+After setting all mandatory variables, you can switch to the new environment by calling `env set <name>`. This command automatically creates a new IBM Cloud space when needed. It also updates `~/.wskprops` so `wsk` commands executed within the shell or outside the shell produce a consistent result.
 
 ## Learning about environments
 
-An *environment* consists of a set of configuration parameters used to instantiate project templates. For instance, the `dev` environment might use a Cloudant database named `database-dev`, whereas the `prod` environment might certainly use a different database named `database-prod`. This can be accomplished by adding the expression `database-${envname}` in the project template.
-
-Most specifically, each environment is characterized by:
-- a unique name which can be used in interpolation,
+An *environment* consists of
+- a unique name
 - a set of policies governing command defaults,
-- and a set of environment variables, including OpenWhisk configuration variables such as `AUTH` and `APIHOST`.
+- and a set of *environment variables*, including the environment name and the OpenWhisk configuration variables such as `AUTH` and `APIHOST`. See below for more details.
 
-### Environment name
-
-The environment *name* is exposed within project configuration as a parameter.
+The environment variables are input parameters to the deployment commands. For instance, when the `shell-project-plugin` is used, `project deploy` runs `wskdeploy` with the variables defined in the current environment. The environment variables can also be referenced directly in the shell, e.g. `wsk action update action-$ACTIONAME action.js`.
 
 ### Policies
 
-*Policies* are attached to environments in order to define default command bevahiors. These policies are:
+*Policies* define default command bevahiors. These policies are:
 - `writable`: dictate which deployment mode to use when *deploying* projects.
 - `promote`: list of environment names this environment promotes to.
 
-### Environment variables
-
-All variables are accessible within interpolation.
-
-### Mandatory variables
+### Mandatory environment variables
 
 Here are the list of variable bindings you must define:
 
