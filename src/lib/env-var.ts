@@ -17,7 +17,8 @@ import * as docs from './docs';
 
 const usage = `${docs.docVar}
 \tenv var set                      [ ${docs.docVarSet} ]
-\tenv var list                     [ ${docs.docVarList} ]`;
+\tenv var list                     [ ${docs.docVarList} ]
+\tenv var delete                   [ ${docs.docVarDelete} ]`;
 
 const doVar = async (_1, _2, _3, modules, _4, _5, _6, argv) => {
     throw new modules.errors.usage(usage);
@@ -28,4 +29,5 @@ module.exports = (commandTree, prequire) => {
 
     require('./env-var-set')(commandTree, prequire);
     require('./env-var-list')(commandTree, prequire);
+    require('./env-var-delete')(commandTree, prequire);
 };

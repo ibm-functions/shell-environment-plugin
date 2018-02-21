@@ -13,12 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { syncEnvName } from "./ui";
-import { setCurrentEnvironment, getCurrentEnvironment } from "./store";
-import { prepareWskprops, ErrorMissingVariable } from "./bluemix";
 
-declare const ui: any;
-// declare const repl: any;
+// CLI Helpers
 
 export function error(errors, msg: string, usage = '') {
     throw new errors.usage(`${msg}${usage ? '\n\n' : ''}${usage}`);
@@ -51,30 +47,4 @@ export async function delay(ms) {
     return new Promise(resolve => {
         setTimeout(() => resolve(), ms);
     });
-}
-
-export async function setEnvironment(name: string, prequire) {
-    setCurrentEnvironment(name);
-    syncEnvName();
-
-    const project = getProjectPlugin(prequire);
-    const wsk = prequire('/ui/commands/openwhisk-core');
-
-    // update .wskprops
-    let projname;
-    if (project) {
-        const cproj = project.current();
-        projname = cproj ? cproj.name : null;
-    }
-    const currentenv = getCurrentEnvironment();
-    await prepareWskprops(wsk, currentenv, projname);
-}
-
-function getProjectPlugin(prequire) {
-    try {
-        return prequire('shell-project-plugin');
-    } catch (e) {
-        // no project, fine
-        return null;
-    }
 }

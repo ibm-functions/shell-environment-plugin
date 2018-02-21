@@ -16,16 +16,14 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { exec } from 'child-process-promise';
-import * as parser from 'properties-parser';
 import * as jwtDecode from 'jwt-decode';
 import { homedir } from 'os';
+import { IEnvironment, IVariables } from './store';
+import { clone } from './clone';
+import { getVar } from './environment';
 
 import * as dbgc from 'debug';
-import { IEnvironment, IVariables } from './store';
-import { getSpaceAnnotation, IRollingUpdateState } from './rolling';
-import { clone } from './clone';
-
-const debug = dbgc('project:bluemix');
+const debug = dbgc('env:bluemix');
 
 declare const ui: any;
 
@@ -78,64 +76,29 @@ const iamTokens: { [key: string]: IJWTToken } = {};
 
 export const wskProps = (cred: ICredential) => `${cred.home}/.wskprops`;
 
-export class ErrorMissingVariable extends Error {
-    constructor(public name: string) {
-        super(`missing ${name} variable`);
-        Object.setPrototypeOf(this, new.target.prototype);
-    }
-}
-
 // Update .wskprops based on current environment. Return the cached .wskprops location
-export async function prepareWskprops(wsk, env: IEnvironment, global: boolean): Promise<string> {
+export async function prepareWskprops(env: IEnvironment, global: boolean): Promise<string> {
     const vars = env.variables || {};
 
     // Check for mandatory env vars
     const apikey = getVar(vars, 'BLUEMIX_API_KEY');
     const endpoint = getVar(vars, 'BLUEMIX_ENDPOINT');
     const org = getVar(vars, 'BLUEMIX_ORG');
-
-    const space = resolveSpace(env.name, env.variables, env.rolling);
+    const space = getVar(vars, 'BLUEMIX_SPACE');
 
     const cred: ICredential = { apikey, endpoint, org, space };
     fixupCredentials(cred);
 
     await ensureSpaceExists(cred);
     const wskpropfile = wskProps(cred);
-    const wskprops = parser.read(wskpropfile);
 
-    // update ~/.wskprops
     if (global) {
+        // update bluemix target (if needed)
+        // TODO
         await fs.copy(wskpropfile, path.join(homedir(), '.wskprops'));
-
-        wsk.auth.set(wskprops.AUTH);
-        wsk.apiHost.set(wskprops.APIHOST);
     }
+
     return wskpropfile;
-}
-
-function resolveSpace(name: string, variables: IVariables, rollingUpdate: IRollingUpdateState): string {
-    const rolling = getSpaceAnnotation(rollingUpdate);
-    const bxspace = escapeNamespace(`${getVar(variables || {}, 'BLUEMIX_SPACE')}-${name}${rolling}`);
-
-    debug(`targeting ${bxspace} space`);
-    return bxspace;
-}
-
-export async function copyTo(from: IEnvironment, to: IEnvironment) {
-    const fromWskFile = await prepareWskprops(null, from, false);
-    const toWskFile = await prepareWskprops(null, to, false);
-
-    const fromwskprops = parser.read(fromWskFile);
-    const towskprops = parser.read(toWskFile);
-
-    return clone(fromwskprops, towskprops);
-}
-
-function getVar(vars, name: string) {
-    const variable = vars[name];
-    if (!variable || !variable.value)
-        throw new ErrorMissingVariable(name);
-    return variable.value;
 }
 
 // Run bluemix command. Refresh token if needed.
@@ -150,10 +113,15 @@ export async function run(cred: ICredential, cmd: string) {
 async function doRun(cred: ICredential, cmd: string) {
     const bx = `WSK_CONFIG_FILE="${wskProps(cred)}" BLUEMIX_HOME="${cred.home}" bx ${cmd}`;
     debug(`exec ${bx}`);
-    const result = await exec(bx);
-    debug(`stdout: ${JSON.stringify(result.stdout)}`);
-    debug(`stderr ${JSON.stringify(result.stderr)}`);
-    return result;
+    try {
+        const result = await exec(bx);
+        debug(`stdout: ${JSON.stringify(result.stdout)}`);
+        return result;
+    } catch (e) {
+        debug(`stdout: ${JSON.stringify(e.stdout)}`);
+        debug(`stderr ${JSON.stringify(e.stderr)}`);
+        throw e;
+    }
 }
 
 // Login to Bluemix. Only do it if token has expired.
@@ -180,7 +148,6 @@ async function login(cred: ICredential) {
             await doRun(cred, bx);
             cacheIAMToken(cred);
         } catch (e) {
-            debug(e);
             return false;
         }
     }

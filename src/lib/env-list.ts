@@ -17,6 +17,7 @@ import * as fs from 'fs-extra';
 import { docList } from './docs';
 import { sliceCmd } from './cli';
 import { getEnvironments, IEnvironments } from './store';
+import { prettyRollingUpdate } from './rolling';
 
 const usage = docList;
 
@@ -35,7 +36,7 @@ function formatForShell(envs: IEnvironments) {
         const v = envs[k];
         return { name: v.name, type: 'env', attributes: [
             {
-                value: document.createTextNode(v.readonly ? 'read-only' : 'read-write'),
+                value: document.createTextNode(v.rolling ? prettyRollingUpdate[v.rolling.kind] : 'in-place'),
                 css: 'green-text'
             }]
         };

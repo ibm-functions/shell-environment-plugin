@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 import { docSet } from './docs';
-import { sliceCmd, error, setEnvironment } from './cli';
+import { sliceCmd, error } from './cli';
 import { getEnvironments, setCurrentEnvironment, getCurrentEnvironment } from './store';
-import { syncEnvName } from './ui';
-import { prepareWskprops, ErrorMissingVariable } from './bluemix';
+import { setEnvironment, ErrorMissingVariable } from './environment';
 
 let wsk;
 
@@ -28,26 +27,29 @@ const usage = `${docSet}
 Required parameters:
 \tenv            the environment name (e.g. dev, prod)`;
 
-const doSet = prequire => async (_1, _2, _3, { ui, errors }, _4, _5, _6, argv) => {
+const doSet = wsk => async (_1, _2, _3, { ui, errors }, _4, _5, _6, argv) => {
     if (argv.help)
         throw new errors.usage(usage);
 
     sliceCmd(argv, 'set');
 
-    const name = argv._.shift();
-    if (!name)
+    const qname = argv._.shift();
+    if (!qname)
         throw new errors.usage(`expected environment name.\n\n${usage}`);
+
+    let [name, version] = qname.split('@');
+    version = version || 'latest';
 
     const envs = getEnvironments();
     if (!envs[name])
         error(errors, `environment ${name} does not exist`);
 
     const currentEnv = getCurrentEnvironment();
-    if (currentEnv && currentEnv.name === name)
+    if (currentEnv && currentEnv.name === name && currentEnv.version === version)
         return true;
 
     try {
-        await setEnvironment(name, prequire);
+        await setEnvironment(wsk, name, version);
         return true;
     } catch (e) {
         if (e instanceof ErrorMissingVariable)
@@ -63,5 +65,7 @@ function errorMissingVar(name: string) {
 }
 
 module.exports = (commandTree, prequire) => {
-    commandTree.listen('/env/set', doSet(prequire), { docs: docSet });
+    const wsk = prequire('/ui/commands/openwhisk-core');
+
+    commandTree.listen('/env/set', doSet(wsk), { docs: docSet });
 };

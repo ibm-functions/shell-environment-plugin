@@ -19,6 +19,7 @@
         "member-access": false,
         "no-shadowed-variable": false,
         "no-conditional-assignment": false,
-        "no-console": false
+        "no-console": false,
+        "unified-signatures": false
     }
 }

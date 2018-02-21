@@ -15,7 +15,7 @@
  */
 import { syncEnvName } from './lib/ui';
 import { getCurrentEnvironment } from './lib/store';
-import { setEnvironment } from './lib/cli';
+import { setEnvironment } from './lib/environment';
 
 // preloading hook.
 function init(commandTree, prequire) {
@@ -31,7 +31,8 @@ function init(commandTree, prequire) {
     const current = getCurrentEnvironment();
     if (current && current.name) {
         try {
-            setEnvironment(current.name, prequire);
+            const wsk = prequire('/ui/commands/openwhisk-core');
+            setEnvironment(wsk, current.name, current.version || 'latest');
         } catch (e) {
             throw e;
         }

@@ -15,7 +15,7 @@
  */
 import { EventEmitter } from 'events';
 import { error } from './cli';
-import { IRollingUpdateState, newDefaultRollingUpdate } from './rolling';
+import { IRollingUpdate, newDefaultRollingStrategy } from './rolling';
 
 import * as dbgc from 'debug';
 const debug = dbgc('env:store');
@@ -46,11 +46,14 @@ export interface IEnvironment {
     // Environment name
     name: string;
 
+    // Version tag. Optional = latest
+    version?: string;
+
     // whether the assets in this environment are readonly
     readonly: boolean;
 
     // rolling update state
-    rolling: IRollingUpdateState;
+    rolling: IRollingUpdate;
 
     // Cached environment variables
     variables: IVariables;
@@ -69,7 +72,7 @@ export function newEnvironment(name: string, store: StoreKind): IEnvironment {
     if (envs[name])
         throw new Error(`environment ${name} already exists`);
 
-    envs[name] = { name, readonly: false, rolling: newDefaultRollingUpdate(), store: newStore(store), variables: {} };
+    envs[name] = { name, readonly: false, rolling: newDefaultRollingStrategy(), store: newStore(store), variables: {} };
     setEnvironments(envs);
     return envs[name];
 }
@@ -100,7 +103,7 @@ export function getCurrentEnvironmentOrError(errors): IEnvironment {
     error(error, 'no environment set');
 }
 
-export function updateEnvironment(env: IEnvironment) {
+export function persistEnvironment(env: IEnvironment) {
     const envs = getEnvironments();
     envs[env.name] = env;
     setEnvironments(envs);

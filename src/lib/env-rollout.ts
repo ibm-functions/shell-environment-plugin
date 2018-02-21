@@ -16,7 +16,7 @@
 import { error, sliceCmd, checkExtraneous, consume } from './cli';
 import { docRollout } from './docs';
 import { getCurrentEnvironmentOrError } from './store';
-import { enableBluegreen } from './rolling';
+import { enableBluegreen } from './environment';
 
 const usage = `${docRollout}
 
@@ -25,7 +25,7 @@ const usage = `${docRollout}
 Optional parameters:
 \t--bluegreen               set deployment policy to blue/green`;
 
-const doRollout = async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
+const doRollout = wsk =>  async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
     if (argv.help)
         throw new errors.usage(usage);
 
@@ -35,12 +35,13 @@ const doRollout = async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
 
     const env = getCurrentEnvironmentOrError(errors);
     if (bluegreen) {
-        await enableBluegreen(env);
+        await enableBluegreen(wsk, env);
     }
 
     return true;
 };
 
-module.exports = (commandTree, _) => {
-    commandTree.listen('/env/rollout', doRollout, { docs: docRollout });
+module.exports = (commandTree, prequire) => {
+    const wsk = prequire('/ui/commands/openwhisk-core');
+    commandTree.listen('/env/rollout', doRollout(wsk), { docs: docRollout });
 };
