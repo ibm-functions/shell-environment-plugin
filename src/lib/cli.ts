@@ -67,7 +67,7 @@ export async function setEnvironment(name: string, prequire) {
         projname = cproj ? cproj.name : null;
     }
     const currentenv = getCurrentEnvironment();
-    await prepareWskprops(wsk, ui.userDataDir(), currentenv, projname);
+    await prepareWskprops(wsk, currentenv, projname);
 }
 
 function getProjectPlugin(prequire) {

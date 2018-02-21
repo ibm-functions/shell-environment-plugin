@@ -19,10 +19,10 @@ import { newEnvironment, StoreKind } from './store';
 
 const usage = `${docNew}
 
-\tenv new <env>
+\tenv new <name>
 
 Required parameters:
-\t<env>               the environment name`;
+\t<name>               the environment name`;
 
 const doNew = async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
     if (argv.help)

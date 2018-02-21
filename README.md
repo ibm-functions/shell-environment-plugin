@@ -63,9 +63,8 @@ The environment variables are input parameters to the deployment commands. For i
 
 ### Policies
 
-*Policies* define default command bevahiors. These policies are:
-- `writable`: dictate which deployment mode to use when *deploying* projects.
-- `promote`: list of environment names this environment promotes to.
+*Policies* define command default bevahiors. These policies are:
+- `rolling-update`: govern the actual deployment target. Possible values: `off` and `bluegreen`
 
 ### Mandatory environment variables
 

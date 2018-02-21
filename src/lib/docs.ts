@@ -21,3 +21,4 @@ export const docSet = 'Set the current environment';
 export const docVar = 'Commands related to environment variables';
 export const docVarSet = 'Set the value of a variable in the current environment';
 export const docVarList = 'List environment variables';
+export const docRollout = 'Configure rollout deployment policy of the current environment';

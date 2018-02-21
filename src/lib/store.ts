@@ -15,6 +15,7 @@
  */
 import { EventEmitter } from 'events';
 import { error } from './cli';
+import { IRollingUpdateState, newDefaultRollingUpdate } from './rolling';
 
 import * as dbgc from 'debug';
 const debug = dbgc('env:store');
@@ -35,7 +36,10 @@ export interface IVariable {
 
     // secret?
     issecret?: boolean;
+}
 
+export interface IVariables {
+    [key: string]: IVariable;
 }
 
 export interface IEnvironment {
@@ -45,16 +49,14 @@ export interface IEnvironment {
     // whether the assets in this environment are readonly
     readonly: boolean;
 
-    // List of promoted environments */
-    promote?: string[];
+    // rolling update state
+    rolling: IRollingUpdateState;
 
     // Cached environment variables
-    variables: { [key: string]: IVariable };
+    variables: IVariables;
 
     // Backend store
     store: IVariableStore;
-
-    // TODO: deployments?
 }
 
 export interface IEnvironments { [key: string]: IEnvironment; }
@@ -67,7 +69,7 @@ export function newEnvironment(name: string, store: StoreKind): IEnvironment {
     if (envs[name])
         throw new Error(`environment ${name} already exists`);
 
-    envs[name] = { name, readonly: false, store: newStore(store), variables: {} };
+    envs[name] = { name, readonly: false, rolling: newDefaultRollingUpdate(), store: newStore(store), variables: {} };
     setEnvironments(envs);
     return envs[name];
 }

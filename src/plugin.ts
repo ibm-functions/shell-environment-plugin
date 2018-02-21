@@ -44,6 +44,7 @@ module.exports = (commandTree, prequire) => {
     require('./lib/env-set')(commandTree, prequire);
     require('./lib/env-show')(commandTree, prequire);
     require('./lib/env-new')(commandTree, prequire);
+    require('./lib/env-rollout')(commandTree, prequire);
 
     init(commandTree, prequire);
 

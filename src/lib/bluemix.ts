@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 IBM Corporation
+ * Copyright 2018 IBM Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,13 @@ import * as jwtDecode from 'jwt-decode';
 import { homedir } from 'os';
 
 import * as dbgc from 'debug';
-import { IEnvironment } from './store';
+import { IEnvironment, IVariables } from './store';
+import { getSpaceAnnotation, IRollingUpdateState } from './rolling';
+import { clone } from './clone';
+
 const debug = dbgc('project:bluemix');
+
+declare const ui: any;
 
 // @return true if Bluemix with wsk plugin is available on this system, false otherwise
 export async function isBluemixCapable() {
@@ -80,8 +85,8 @@ export class ErrorMissingVariable extends Error {
     }
 }
 
-// Update .wskprops based on current environment. Return the location of .wskprops to be used by wskdeploy
-export async function prepareWskprops(wsk, userDataDir: string, env: IEnvironment, projectname: string | null): Promise<string> {
+// Update .wskprops based on current environment. Return the cached .wskprops location
+export async function prepareWskprops(wsk, env: IEnvironment, global: boolean): Promise<string> {
     const vars = env.variables || {};
 
     // Check for mandatory env vars
@@ -89,36 +94,41 @@ export async function prepareWskprops(wsk, userDataDir: string, env: IEnvironmen
     const endpoint = getVar(vars, 'BLUEMIX_ENDPOINT');
     const org = getVar(vars, 'BLUEMIX_ORG');
 
-    // When deployment is once-only
-    // if (env.readonly)
-    const space = resolveSpace(env, projectname, null);
+    const space = resolveSpace(env.name, env.variables, env.rolling);
 
     const cred: ICredential = { apikey, endpoint, org, space };
-    fixupCredentials(cred, userDataDir);
+    fixupCredentials(cred);
 
     await ensureSpaceExists(cred);
     const wskpropfile = wskProps(cred);
-    await fs.copy(wskpropfile, path.join(homedir(), '.wskprops'));
+    const wskprops = parser.read(wskpropfile);
 
-    const wskprops = parser.read(wskProps(cred));
-    wsk.auth.set(wskprops.AUTH);
-    wsk.apiHost.set(wskprops.APIHOST);
+    // update ~/.wskprops
+    if (global) {
+        await fs.copy(wskpropfile, path.join(homedir(), '.wskprops'));
 
+        wsk.auth.set(wskprops.AUTH);
+        wsk.apiHost.set(wskprops.APIHOST);
+    }
     return wskpropfile;
 }
 
-function resolveSpace(env: IEnvironment, projectname: string, version: string): string {
-    const name = env.name;
+function resolveSpace(name: string, variables: IVariables, rollingUpdate: IRollingUpdateState): string {
+    const rolling = getSpaceAnnotation(rollingUpdate);
+    const bxspace = escapeNamespace(`${getVar(variables || {}, 'BLUEMIX_SPACE')}-${name}${rolling}`);
 
-    let bxspace;
-    if (projectname)
-        bxspace = (version) ? `${projectname}-${name}@${version}` : `${projectname}-${name}`;
-    else {
-        bxspace = getVar(env.variables || {}, 'BLUEMIX_SPACE');
-    }
-    bxspace = escapeNamespace(bxspace);
     debug(`targeting ${bxspace} space`);
     return bxspace;
+}
+
+export async function copyTo(from: IEnvironment, to: IEnvironment) {
+    const fromWskFile = await prepareWskprops(null, from, false);
+    const toWskFile = await prepareWskprops(null, to, false);
+
+    const fromwskprops = parser.read(fromWskFile);
+    const towskprops = parser.read(toWskFile);
+
+    return clone(fromwskprops, towskprops);
 }
 
 function getVar(vars, name: string) {
@@ -224,15 +234,17 @@ export async function installWskPlugin(cred: ICredential) {
     }
 }
 
-export function fixupCredentials(cred: ICredential, userDataDir: string) {
+export function fixupCredentials(cred: ICredential) {
+    const userDataDir = ui.userDataDir();
     cred.home = path.join(userDataDir, 'bx', cred.endpoint, cred.org, cred.space ? cred.space : '');
 }
 
 export async function ensureSpaceExists(cred: ICredential) {
     debug(`checking ${cred.space} space exists`);
 
-    const subcred = { ...cred };
+    let subcred = { ...cred };
     delete subcred.space;
+    fixupCredentials(subcred);
     await run(subcred, `account space-create ${cred.space}`); // fast when already exists
     await run(cred, `target -s ${cred.space}`);
 
