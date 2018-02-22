@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 IBM Corporation
+ * Copyright 2018 IBM Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,19 +15,17 @@
  */
 import * as docs from './docs';
 
-const usage = `${docs.docEnv}
-\tenv new                          [ ${docs.docNew} ]
-\tenv set                          [ ${docs.docSet} ]
-\tenv show                         [ ${docs.docShow} ]
-\tenv list                         [ ${docs.docList} ]
-\tenv var                          [ ${docs.docVar} ]`;
+const usage = `${docs.docRollout}
+\trollout enable    [ ${docs.docRolloutEnable} ]
+\trollout upgrade   [ ${docs.docRolloutUpgrade} ]`;
 
-const doEnv = async (_1, _2, _3, modules, _4, _5, _6, argv) => {
-    throw new modules.errors.usage(usage);
+const doRollout = async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
+    throw new errors.usage(usage);
 };
 
 module.exports = (commandTree, prequire) => {
-    commandTree.listen('/env', doEnv, { docs: docs.docEnv });
+    commandTree.listen('/rollout', doRollout, { docs: docs.docRollout });
 
-    require('./env-var')(commandTree, prequire);
+    require('./rollout-enable')(commandTree, prequire);
+    require('./rollout-upgrade')(commandTree, prequire);
 };

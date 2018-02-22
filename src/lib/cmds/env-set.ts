@@ -15,8 +15,8 @@
  */
 import { docSet } from './docs';
 import { sliceCmd, error } from './cli';
-import { getEnvironments, setCurrentEnvironment, getCurrentEnvironment } from './store';
-import { setEnvironment, ErrorMissingVariable } from './environment';
+import { getEnvironments, setCurrentEnvironment, getCurrentEnvironment } from '../store';
+import { setEnvironment, ErrorMissingVariable } from '../environment';
 
 let wsk;
 

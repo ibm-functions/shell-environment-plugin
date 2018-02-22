@@ -13,33 +13,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { docVarDelete } from './docs';
+import { docVarSet } from './docs';
 import { sliceCmd, error } from './cli';
-import { persistEnvironment, getCurrentEnvironment } from './store';
-import { deleteVar } from './environment';
+import { persistEnvironment, getCurrentEnvironment } from '../store';
 
-const usage = `${docVarDelete}
+const usage = `${docVarSet}
 
-\tenv var delete <variable_name>`;
+\tenv var set <variable_name> <variable_value>`;
 
-const doVarDelete = async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
+const doVarSet = async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
     if (argv.help)
         throw new errors.usage(usage);
 
-    sliceCmd(argv, 'delete');
+    sliceCmd(argv, 'set');
 
     const name = argv._.shift();
     if (!name)
         error(errors, 'missing variable name', usage);
 
+    const value = argv._.shift();
+    if (!value)
+        error(errors, 'missing variable value', usage);
+
     const env = getCurrentEnvironment();
     if (!env)
         error(errors, 'current environment not set');
 
-    deleteVar(env, name);
+    env.variables = env.variables || {};
+    env.variables[name] = { value };
+    persistEnvironment(env);
     return true;
 };
 
 module.exports = (commandTree, require) => {
-    commandTree.listen('/env/var/delete', doVarDelete, { docs: docVarDelete });
+    commandTree.listen('/env/var/set', doVarSet, { docs: docVarSet });
 };

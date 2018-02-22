@@ -1,3 +1,4 @@
+
 /*
  * Copyright 2018 IBM Corporation
  *
@@ -13,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { getCurrentEnvironment, IEnvironment } from '../store';
 
 // CLI Helpers
 
@@ -47,4 +49,11 @@ export async function delay(ms) {
     return new Promise(resolve => {
         setTimeout(() => resolve(), ms);
     });
+}
+
+export function getCurrentEnvironmentOrError(errors): IEnvironment {
+    const env = getCurrentEnvironment();
+    if (!env)
+        error(errors, 'no environment set');
+    return env;
 }

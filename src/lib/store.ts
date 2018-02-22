@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 import { EventEmitter } from 'events';
-import { error } from './cli';
 import { IRollingUpdate, newDefaultRollingStrategy } from './rolling';
 
 import * as dbgc from 'debug';
@@ -92,15 +91,6 @@ export function getCurrentEnvironment(): IEnvironment {
         return env[name];
     }
     return null;
-}
-
-export function getCurrentEnvironmentOrError(errors): IEnvironment {
-    const name = localStorage.getItem(envcurrentkey);
-    if (name) {
-        const env = getEnvironments();
-        return env[name];
-    }
-    error(error, 'no environment set');
 }
 
 export function persistEnvironment(env: IEnvironment) {

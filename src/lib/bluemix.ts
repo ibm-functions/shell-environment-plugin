@@ -77,9 +77,7 @@ const iamTokens: { [key: string]: IJWTToken } = {};
 export const wskProps = (cred: ICredential) => `${cred.home}/.wskprops`;
 
 // Update .wskprops based on current environment. Return the cached .wskprops location
-export async function prepareWskprops(env: IEnvironment, global: boolean): Promise<string> {
-    const vars = env.variables || {};
-
+export async function prepareWskprops(vars: IVariables, global: boolean): Promise<string> {
     // Check for mandatory env vars
     const apikey = getVar(vars, 'BLUEMIX_API_KEY');
     const endpoint = getVar(vars, 'BLUEMIX_ENDPOINT');

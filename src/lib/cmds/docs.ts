@@ -22,4 +22,7 @@ export const docVar = 'Commands related to environment variables';
 export const docVarSet = 'Set the value of a variable in the current environment';
 export const docVarDelete = 'Delete a variable from the current environment';
 export const docVarList = 'List environment variables';
-export const docRollout = 'Configure rollout deployment policy of the current environment';
+
+export const docRollout = 'Commands related to rollout deployments';
+export const docRolloutEnable = 'Enable rollout deployment for the current environment';
+export const docRolloutUpgrade = 'Upgrade active deployment to latest version';

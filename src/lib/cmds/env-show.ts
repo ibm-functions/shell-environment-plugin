@@ -17,7 +17,7 @@ import * as fs from 'fs-extra';
 import * as env from './env';
 import { docShow } from './docs';
 import { sliceCmd } from './cli';
-import { getCurrentEnvironment, IEnvironment } from './store';
+import { getCurrentEnvironment, IEnvironment } from '../store';
 
 const usage = docShow;
 

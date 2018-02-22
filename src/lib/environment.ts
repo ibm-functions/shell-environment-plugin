@@ -18,7 +18,7 @@ import * as parser from 'properties-parser';
 import { syncEnvName } from "./ui";
 import { setCurrentEnvironment, getCurrentEnvironment, IEnvironment, IVariables, persistEnvironment, IVariable, getEnvironments } from "./store";
 import { prepareWskprops, escapeNamespace } from "./bluemix";
-import { newBluegreentRollingStrategy, getVersionTag, checkVersionTag } from './rolling';
+import { newBluegreentRollingStrategy, checkVersionTag, getVersionSpaceTag } from './rolling';
 import { clone } from './clone';
 
 import * as dbgc from 'debug';
@@ -39,10 +39,12 @@ export async function setEnvironment(wsk, name: string, version: string) {
     env.version = version;
     persistEnvironment(env);
 
-    resolveSpace(env);
-    const wskpropsfile = await prepareWskprops(env, true);
+    const bxspace = resolveSpace(env.name, env.variables, getVersionSpaceTag(env));
+    setVar(env, 'BLUEMIX_SPACE', { value: bxspace, iscomputed: true });
 
-    // Refresh OW client. Depends on rolling update strategy.
+    const wskpropsfile = await prepareWskprops(env.variables, true);
+
+    // Refresh OW client.
     await initOW(wsk, env, wskpropsfile);
 
     // Update store
@@ -60,12 +62,9 @@ async function initOW(wsk, env: IEnvironment, wskpropsFile: string) {
     await wsk.apiHost.set(wskprops.APIHOST);
 }
 
-function resolveSpace(env: IEnvironment): void {
-    const bxspace = getVar(env.variables || {}, 'BLUEMIX_SPACE_PREFIX');
-    const tag = getVersionTag(env);
-    const resolved = escapeNamespace(`${bxspace}-${env.name}${tag ? `@${tag}` : ''}`);
-
-    setVar(env, 'BLUEMIX_SPACE', { value: resolved, iscomputed: true });
+export function resolveSpace(envname: string, vars: IVariables, tag: string): string {
+    const bxspace = getVar(vars || {}, 'BLUEMIX_SPACE_PREFIX');
+    return escapeNamespace(`${bxspace}-${envname}${tag ? `@${tag}` : ''}`);
 }
 
 function getProjectPlugin(prequire) {
@@ -97,8 +96,8 @@ export function deleteVar(env: IEnvironment, name: string) {
 }
 
 export async function copyTo(from: IEnvironment, to: IEnvironment) {
-    const fromWskFile = await prepareWskprops(from, false);
-    const toWskFile = await prepareWskprops(to, false);
+    const fromWskFile = await prepareWskprops(from.variables, false);
+    const toWskFile = await prepareWskprops(to.variables, false);
 
     const fromwskprops = parser.read(fromWskFile);
     const towskprops = parser.read(toWskFile);

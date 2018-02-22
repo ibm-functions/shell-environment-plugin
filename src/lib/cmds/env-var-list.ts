@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 import { docVarList } from './docs';
-import { sliceCmd, error } from './cli';
-import { getCurrentEnvironmentOrError, IEnvironment } from './store';
+import { getCurrentEnvironmentOrError, sliceCmd, error } from './cli';
+import { IEnvironment } from '../store';
 
 const usage = docVarList;
 

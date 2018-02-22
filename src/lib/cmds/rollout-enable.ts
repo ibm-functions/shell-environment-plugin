@@ -1,3 +1,4 @@
+
 /*
  * Copyright 2018 IBM Corporation
  *
@@ -13,35 +14,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { error, sliceCmd, checkExtraneous, consume } from './cli';
-import { docRollout } from './docs';
-import { getCurrentEnvironmentOrError } from './store';
-import { enableBluegreen } from './environment';
+import { error, sliceCmd, checkExtraneous, consume, getCurrentEnvironmentOrError } from './cli';
+import { docRolloutEnable } from './docs';
+import { enableBluegreen } from '../environment';
 
-const usage = `${docRollout}
+const usage = docRolloutEnable;
+// `${docRolloutEnable}
 
-\tenv rollout [--bluegreen]
+// \trollout enable [--bluegreen]
 
-Optional parameters:
-\t--bluegreen               set deployment policy to blue/green`;
+// Optional parameters:
+// \t--bluegreen               set deployment policy to blue/green`;
 
-const doRollout = wsk =>  async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
+const doRolloutEnable = wsk =>  async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
     if (argv.help)
         throw new errors.usage(usage);
 
-    sliceCmd(argv, 'rollout');
+    sliceCmd(argv, 'enable');
 
-    const bluegreen = consume(argv, ['bluegreen']);
+    // const bluegreen = consume(argv, ['bluegreen']);
 
     const env = getCurrentEnvironmentOrError(errors);
-    if (bluegreen) {
-        await enableBluegreen(wsk, env);
-    }
+    // if (bluegreen) {
+    await enableBluegreen(wsk, env);
+    // }
 
     return true;
 };
 
 module.exports = (commandTree, prequire) => {
     const wsk = prequire('/ui/commands/openwhisk-core');
-    commandTree.listen('/env/rollout', doRollout(wsk), { docs: docRollout });
+    commandTree.listen('/rollout/enable', doRolloutEnable(wsk), { docs: docRolloutEnable });
 };

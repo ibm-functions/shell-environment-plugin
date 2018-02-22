@@ -15,7 +15,7 @@
  */
 import { error, sliceCmd, checkExtraneous } from './cli';
 import { docNew } from './docs';
-import { newEnvironment, StoreKind } from './store';
+import { newEnvironment, StoreKind } from '../store';
 
 const usage = `${docNew}
 

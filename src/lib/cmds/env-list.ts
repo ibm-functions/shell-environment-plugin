@@ -16,8 +16,8 @@
 import * as fs from 'fs-extra';
 import { docList } from './docs';
 import { sliceCmd } from './cli';
-import { getEnvironments, IEnvironments } from './store';
-import { prettyRollingUpdate } from './rolling';
+import { getEnvironments, IEnvironments } from '../store';
+import { prettyRollingUpdate } from '../rolling';
 
 const usage = docList;
 

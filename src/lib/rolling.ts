@@ -15,12 +15,13 @@
  */
 
 import * as parser from 'properties-parser';
-import { IEnvironment } from "./store";
+import { IEnvironment, IVariable } from "./store";
 import { prepareWskprops, IWskProps } from "./bluemix";
-import { NamespaceRolling } from "./namespace-rolling";
 import * as openwhisk from "openwhisk";
 
 import * as dbgc from 'debug';
+import { resolveSpace } from './environment';
+import { reroute } from './reroute';
 const debug = dbgc('env:environment');
 
 declare let ow: any;
@@ -57,27 +58,63 @@ export function checkVersionTag(env: IEnvironment, tag: string) {
     }
 }
 
-export function getVersionTag(env: IEnvironment): string {
+// Convert environment version to corresponding IBM cloud space tag
+export function getVersionSpaceTag(env: IEnvironment): string {
     const kind = env.rolling ? env.rolling.kind : 'NONE';
     switch (kind) {
         case RollingStrategy.BLUEGREEN:
-            const bgrolling = env.rolling as IBlueGreen;
-            if (env.version && env.version === 'master')
-                return bgrolling.master === BlueGreenTargets.blue ? 'blue' : 'green';
-            if (env.version === 'active')
-                return '';
-            return env.version;
+            return getBlueGreenVersionSpaceTag(env.version, env.rolling as IBlueGreen);
         default:
             return '';
     }
 }
 
+export async function upgrade(env: IEnvironment) {
+    const kind = env.rolling ? env.rolling.kind : 'NONE';
+    switch (kind) {
+        case RollingStrategy.BLUEGREEN:
+            await upgradeBlueGreen(env);
+            break;
+        default:
+            throw new Error('this environment does not support rolling update');
+
+    }
+}
+
 export const prettyRollingUpdate = ['in place', 'bluegreen'];
 
-// Blue Green rolling update
+// BlueGreen rolling update
 
 enum BlueGreenTargets { blue, green }
 
 export interface IBlueGreen extends IRollingUpdate {
     master: BlueGreenTargets;
+}
+
+function getBlueGreenVersionSpaceTag(version: string, bgrolling: IBlueGreen): string {
+    if (version && version === 'master')
+        return bgrolling.master === BlueGreenTargets.blue ? 'blue' : 'green';
+
+    if (version === 'active')
+        return '';
+    return version;
+}
+
+async function upgradeBlueGreen(env: IEnvironment) {
+    const bgrolling = env.rolling as IBlueGreen;
+
+    // Update assets in active environment to point to master
+    const activeVars = { ...env.variables, BLUEMIX_SPACE: { value: resolveSpace(env.name, env.variables, '') } };
+    const activeWskFile = await prepareWskprops(activeVars, false);
+
+    const tag = getBlueGreenVersionSpaceTag('master', bgrolling);
+    const targetVars = { ...env.variables, BLUEMIX_SPACE: { value: resolveSpace(env.name, env.variables, tag) } } as any;
+    const targetWskFile = await prepareWskprops(targetVars, false);
+
+    const activeProps = parser.read(activeWskFile);
+    const targetProps = parser.read(targetWskFile);
+    targetProps.NAMESPACE = `${targetVars.BLUEMIX_ORG.value}_${targetVars.BLUEMIX_SPACE.value}`;
+
+    await reroute(activeProps, targetProps);
+
 }
