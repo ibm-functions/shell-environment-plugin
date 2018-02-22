@@ -22,10 +22,10 @@ let wsk;
 
 const usage = `${docSet}
 
-\tenv set <env>
+\tenv set <env>[@<version>]
 
 Required parameters:
-\tenv            the environment name (e.g. dev, prod)`;
+\tenv            the environment name optionally followed by a version`;
 
 const doSet = wsk => async (_1, _2, _3, { ui, errors }, _4, _5, _6, argv) => {
     if (argv.help)
@@ -38,7 +38,7 @@ const doSet = wsk => async (_1, _2, _3, { ui, errors }, _4, _5, _6, argv) => {
         throw new errors.usage(`expected environment name.\n\n${usage}`);
 
     let [name, version] = qname.split('@');
-    version = version || 'latest';
+    version = version || 'master';
 
     const envs = getEnvironments();
     if (!envs[name])

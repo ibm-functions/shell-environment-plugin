@@ -58,10 +58,6 @@ async function initOW(wsk, env: IEnvironment, wskpropsFile: string) {
     const wskprops = parser.read(wskpropsFile);
     await wsk.auth.set(wskprops.AUTH);
     await wsk.apiHost.set(wskprops.APIHOST);
-
-    // if (env.rolling) {
-    //     await rollingOW(wsk, env);
-    // }
 }
 
 function resolveSpace(env: IEnvironment): void {

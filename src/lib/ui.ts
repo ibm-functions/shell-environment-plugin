@@ -17,6 +17,7 @@ import { getCurrentEnvironment } from './store';
 
 export function syncEnvName() {
     const nameElem = document.getElementById('openwhisk-namespace');
-    const env = getCurrentEnvironment() || { name: 'no environment' };
-    nameElem.childNodes[0].textContent = env.name;
+    const env = getCurrentEnvironment() || { name: 'no environment', version: 'master' };
+    const version = (env.version && env.version !== 'active') ? `@${env.version}` : '';
+    nameElem.childNodes[0].textContent = `${env.name}${version}`;
 }
