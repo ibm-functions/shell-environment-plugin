@@ -15,14 +15,14 @@
  */
 
 import * as parser from 'properties-parser';
-import { IEnvironment, IVariable } from "./store";
+import { IEnvironment, IVariable, persistEnvironment } from "./store";
 import { prepareWskprops, IWskProps } from "./bluemix";
 import * as openwhisk from "openwhisk";
 
 import * as dbgc from 'debug';
 import { resolveSpace } from './environment';
 import { reroute } from './reroute';
-const debug = dbgc('env:environment');
+const debug = dbgc('env:rolling');
 
 declare let ow: any;
 
@@ -114,7 +114,13 @@ async function upgradeBlueGreen(env: IEnvironment) {
     const activeProps = parser.read(activeWskFile);
     const targetProps = parser.read(targetWskFile);
     targetProps.NAMESPACE = `${targetVars.BLUEMIX_ORG.value}_${targetVars.BLUEMIX_SPACE.value}`;
+    debug(`upgrade to ${targetProps.NAMESPACE}`);
 
     await reroute(activeProps, targetProps);
+
+    // swap master.
+    bgrolling.master = bgrolling.master === BlueGreenTargets.blue ? BlueGreenTargets.green : BlueGreenTargets.blue;
+    persistEnvironment(env);
+    // clone.
 
 }

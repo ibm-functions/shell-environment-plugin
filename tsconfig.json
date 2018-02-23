@@ -3,7 +3,8 @@
         "module": "commonjs",
         "target": "ES2016",
         "rootDir": "src",
-        "outDir": "plugin"
+        "outDir": "plugin",
+        "experimentalDecorators": true
     },
     "exclude": [
         "node_modules",

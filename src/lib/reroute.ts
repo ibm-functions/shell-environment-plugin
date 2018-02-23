@@ -55,7 +55,7 @@ async function reroutePackages(active: Client, target: ITarget): Promise<any[]> 
 }
 
 async function reroutePackage(active: Client, target: ITarget, pkg: Package): Promise<void> {
-    const body = { name: pkg.name, package: { parameters: target.params } };
+    const body = { name: pkg.name };
     await active.packages.update(body as Package);
 
     if (pkg.binding) {
@@ -79,14 +79,14 @@ async function rerouteAction(active: Client, target: ITarget, action: openwhisk.
     console.log(action);
     const qname = parseQName(`/${action.namespace}/${action.name}`);
     const name = makeQName('_', qname.pkg, qname.name);
-    console.log(name);
     const options = {
         name,
         action: {
             exec: {
                 code: authInvokeCode,
                 kind: 'nodejs:6'
-            }
+            },
+            parameters: target.params
         }
     };
     await active.actions.update(options as any);
@@ -104,13 +104,13 @@ async function listActions(from: openwhisk.Client, skip: number): Promise<openwh
 
 const authInvokeCode = `const openwhisk = require("openwhisk");
 function main(params) {
-    const apihost = params.__OW_TARGET_API_HOST;
-    const api_key = params.__OW_TARGET_API_KEY;
-    const namespace = params.__OW_TARGET_NAMESPACE;
-    delete params.__OW_TARGET_API_HOST;
-    delete params.__OW_TARGET_API_KEY;
-    const qname = process.env.__OW_ACTION_NAME;
-    const actionName = qname.substr(qname.indexOf('/', 1) + 1);
-    const ow = openwhisk({ namespace, apihost, api_key });
-    return ow.actions.invoke({ actionName, params, blocking: true });
+  const apihost = params.__OW_TARGET_API_HOST;
+  const api_key = params.__OW_TARGET_API_KEY;
+  const namespace = params.__OW_TARGET_NAMESPACE;
+  delete params.__OW_TARGET_API_HOST;
+  delete params.__OW_TARGET_API_KEY;
+  const qname = process.env.__OW_ACTION_NAME;
+  const actionName = qname.substr(qname.indexOf('/', 1) + 1);
+  const ow = openwhisk({ namespace, apihost, api_key });
+  return ow.actions.invoke({ actionName, params, blocking: true, result: true });
 }`;
