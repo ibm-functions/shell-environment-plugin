@@ -2,3 +2,4 @@ node_modules
 plugin
 yarn.lock
 videos
+doc/rolling-update.key

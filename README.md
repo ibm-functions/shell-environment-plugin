@@ -32,25 +32,51 @@ fsh env list                         [ List environments ]
 fsh env var                          [ Commands related to environment variables ]
 fsh env var set                      [ Set the value of a variable in the current environment ]
 fsh env var list                     [ List environment variables ]
+fsh env var delete                   [ Delete a variable from the current environment ]
+
+fsh rollout enable                   [ Enable rollout deployment for the current environment ]
+fsh rollout upgrade                  [ Upgrade the active deployment to the latest version ]
 ...
 ```
 
 ## Defining a new environment
 
-To create a new environment, call `env new <name>` and configure it by setting the value of the mandatory environment variables:
+To create a new environment, call `env new <name>` and configure it to point to an IBM Cloud space by setting the value of these environment variables:
 
 - `BLUEMIX_API_KEY`: the IBM Cloud platform API key for accessing your account
 - `BLUEMIX_ENDPOINT`: the IBM Cloud endpoint where to deploy assets
 - `BLUEMIX_ORG`: the IBM cloud organization where to deploy assets
-- `BLUEMIX_SPACE`: the IBM Cloud space where to deploy assets. This is automatically computed when you are using `shell-project-plugin`.
+- `BLUEMIX_SPACE`: the IBM Cloud space where to deploy assets. This is automatically computed `shell-project-plugin` is activated.
 
-As an example, you can set the IBM Cloud endpoint like this
+As an example, you can set the IBM Cloud endpoint like this:
 
 ```
 env var set BLUEMIX_ENDPOINT api.ng.bluemix.net
 ```
 
 After setting all mandatory variables, you can switch to the new environment by calling `env set <name>`. This command automatically creates a new IBM Cloud space when needed. It also updates `~/.wskprops` so `wsk` commands executed within the shell or outside the shell produce a consistent result.
+
+## Incremental rolling update
+
+By default, deployments are configured to update assets in-place, overriding assets that have been previously deployed. When incremental rolling update is turned on (`fsh rollout enable`), assets are made available to everybody in an incremental way.
+
+The first time incremental rolling update is enabled, two additional IBM cloud spaces are being created:
+
+![Initial Rolling Update](doc/rolling-update/rolling-update.001.png?raw=true)
+
+The `active` deployment contains assets available to everyone. Initially these assets are identical to the ones in the deployments tagged `v0.0.1` and `master`.
+
+Further deployments are always done in the `master` deployment, without altering assets in the `active` deploymnents. When you want to release a new version to everyone, use the command `fsh upgrade` which:
+- creates a new tagged deployment containing assets in `master`
+- and switches the `active` deployment to reflect the new assets
+
+For instance, here how it looks after running `fsh update --minor`:
+
+![Deployment after upgrade](doc/rolling-update/rolling-update.002.png?raw=true)
+
+**Cost impact**
+
+Currently, rolling update is implemented by forwarding incoming requests on `active` to one of the tagged deployments (e.g `v0.1.0`). Since these assets belong to two different namespaces, each activation is double-billed.
 
 ## Learning about environments
 
@@ -64,7 +90,7 @@ The environment variables are input parameters to the deployment commands. For i
 ### Policies
 
 *Policies* define command default bevahiors. These policies are:
-- `rolling-update`: govern the actual deployment target. Possible values: `off` and `bluegreen`
+- `rolling-update`: govern rolling upgrade. Possible values are `off` and `incremental`
 
 ### Mandatory environment variables
 
