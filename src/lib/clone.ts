@@ -15,13 +15,19 @@
  */
 import { IWskProps } from './bluemix';
 import * as openwhisk from 'openwhisk';
+import * as dbgc from 'debug';
+
+const debug = dbgc('env:clone');
 
 export async function clone(from: IWskProps, to: IWskProps) {
+    debug('start cloning namespace');
     const wskfrom = openwhisk({ apihost: from.APIHOST, api_key: from.AUTH });
     const wskto = openwhisk({ apihost: to.APIHOST, api_key: to.AUTH });
 
     await clonePackages(wskfrom, wskto);
     await cloneActions(wskfrom, wskto);
+    debug('end cloning namespace');
+
 }
 
 async function clonePackages(from: openwhisk.Client, to: openwhisk.Client): Promise<any[]> {

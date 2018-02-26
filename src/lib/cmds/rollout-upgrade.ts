@@ -18,13 +18,14 @@ import { error, sliceCmd, checkExtraneous, consume, getCurrentEnvironmentOrError
 import { docRolloutUpgrade } from './docs';
 import { upgrade } from '../rolling';
 
-const usage = docRolloutUpgrade;
-// `${docRolloutEnable}
+const usage = `${docRolloutUpgrade}
 
-// \trollout enable [--bluegreen]
+\trollout enable [--major|--minor|--patch]
 
-// Optional parameters:
-// \t--bluegreen               set deployment policy to blue/green`;
+Optional parameters:
+\t--major               increase major version. Reset minor and patch versions.
+\t--minor               increase minor version. Reset patch version.
+\t--patch               increase patch version.`;
 
 const doRolloutUpgrade = async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
     if (argv.help)
@@ -32,8 +33,28 @@ const doRolloutUpgrade = async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
 
     sliceCmd(argv, 'upgrade');
 
+    const major = consume(argv, ['major']);
+    const minor = consume(argv, ['minor']);
+    const patch = consume(argv, ['patch']);
+
+    let releaseType;
+    if (major) {
+        if (minor || patch) {
+            throw new Error('specify only one release type');
+        }
+        releaseType = 'major';
+    } else if (minor) {
+        if (patch) {
+            throw new Error('specify only one release type');
+        }
+        releaseType = 'minor';
+    } else if (patch) {
+        releaseType = 'patch';
+    } else {
+        throw new Error('missing release type');
+    }
     const env = getCurrentEnvironmentOrError(errors);
-    await upgrade(env);
+    await upgrade(env, { releaseType });
     return true;
 };
 

@@ -16,15 +16,12 @@
  */
 import { error, sliceCmd, checkExtraneous, consume, getCurrentEnvironmentOrError } from './cli';
 import { docRolloutEnable } from './docs';
-import { enableBluegreen } from '../environment';
+import { enableIncRollout } from '../environment';
 
 const usage = docRolloutEnable;
 // `${docRolloutEnable}
 
-// \trollout enable [--bluegreen]
-
-// Optional parameters:
-// \t--bluegreen               set deployment policy to blue/green`;
+// \trollout enable`;
 
 const doRolloutEnable = wsk =>  async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
     if (argv.help)
@@ -36,7 +33,7 @@ const doRolloutEnable = wsk =>  async (_1, _2, _3, { errors }, _4, _5, _6, argv)
 
     const env = getCurrentEnvironmentOrError(errors);
     // if (bluegreen) {
-    await enableBluegreen(wsk, env);
+    await enableIncRollout(wsk, env);
     // }
 
     return true;

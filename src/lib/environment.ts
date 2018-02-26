@@ -18,7 +18,7 @@ import * as parser from 'properties-parser';
 import { syncEnvName } from "./ui";
 import { setCurrentEnvironment, getCurrentEnvironment, IEnvironment, IVariables, persistEnvironment, IVariable, getEnvironments } from "./store";
 import { prepareWskprops, escapeNamespace } from "./bluemix";
-import { newBluegreentRollingStrategy, checkVersionTag, getVersionSpaceTag } from './rolling';
+import { newIncrementalRollingStrategy, checkVersionTag, getVersionSpaceTag } from './rolling';
 import { clone } from './clone';
 
 import * as dbgc from 'debug';
@@ -105,9 +105,9 @@ export async function copyTo(from: IEnvironment, to: IEnvironment) {
     return clone(fromwskprops, towskprops);
 }
 
-// Enable bluegreen strategy for the given environment.
-export async function enableBluegreen(wsk, env: IEnvironment) {
-    env.rolling = newBluegreentRollingStrategy();
+// Enable incremental rollout for the given environment.
+export async function enableIncRollout(wsk, env: IEnvironment) {
+    env.rolling = newIncrementalRollingStrategy();
     persistEnvironment(env);
 
     await setEnvironment(wsk, env.name, 'latest');
