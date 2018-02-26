@@ -1,3 +1,4 @@
+
 /*
  * Copyright 2018 IBM Corporation
  *
@@ -13,21 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import * as docs from './docs';
+import { getCurrentEnvironmentOrError } from './cli';
+import { docRolloutRollback } from './docs';
+import { downgrade } from '../rolling';
 
-const usage = `${docs.docRollout}
-\trollout enable    [ ${docs.docRolloutEnable} ]
-\trollout upgrade   [ ${docs.docRolloutUpgrade} ]
-\trollout rollback  [ ${docs.docRolloutRollback} ]`;
+const usage = docRolloutRollback;
 
-const doRollout = async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
-    throw new errors.usage(usage);
+const doRolloutUpgrade = async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
+    if (argv.help)
+        throw new errors.usage(usage);
+
+    const env = getCurrentEnvironmentOrError(errors);
+    await downgrade(env);
+    return true;
 };
 
 module.exports = (commandTree, prequire) => {
-    commandTree.listen('/rollout', doRollout, { docs: docs.docRollout });
-
-    require('./rollout-enable')(commandTree, prequire);
-    require('./rollout-upgrade')(commandTree, prequire);
-    require('./rollout-rollback')(commandTree, prequire);
+    commandTree.listen('/rollout/rollback', docRolloutRollback, { docs: docRolloutRollback });
 };

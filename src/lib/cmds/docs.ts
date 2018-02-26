@@ -26,3 +26,4 @@ export const docVarList = 'List environment variables';
 export const docRollout = 'Commands related to rollout deployments';
 export const docRolloutEnable = 'Enable rollout deployment for the current environment';
 export const docRolloutUpgrade = 'Upgrade active deployment to latest version';
+export const docRolloutRollback = 'Rollback to previously deployed version';

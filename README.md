@@ -74,9 +74,13 @@ For instance, here how it looks after running `fsh update --minor`:
 
 ![Deployment after upgrade](doc/rolling-update/rolling-update.002.png?raw=true)
 
-**Cost impact**
+### Cost impact
 
 Currently, rolling update is implemented by forwarding incoming requests on `active` to one of the tagged deployments (e.g `v0.1.0`). Since these assets belong to two different namespaces, each activation is double-billed.
+
+### Rolling back
+
+In case the upgrade to a new version didn't work as planned, use `fsh rollout rollback` to reactivates the previous deployment.
 
 ## Learning about environments
 

@@ -82,13 +82,28 @@ export async function upgrade(env: IEnvironment, options?) {
     }
 }
 
-export const prettyRollingUpdate = ['in place', 'bluegreen'];
+export async function downgrade(env: IEnvironment) {
+    const kind = env.rolling ? env.rolling.kind : 'NONE';
+    switch (kind) {
+        case RollingStrategy.INCREMENTAL:
+            await incrementalDowngrade(env);
+            break;
+        default:
+            throw new Error('this environment does not support rolling update');
+
+    }
+}
+
+export const prettyRollingUpdate = ['none', 'incremental'];
 
 // Incremental rolling update
 
 export interface IIncrementalUpdate extends IRollingUpdate {
     // Versioned deployments
     versions?: string[];
+
+    // currently active version
+    version?;
 }
 
 function getIncrementalVersionSpaceTag(version: string, rolling: IIncrementalUpdate): string {
@@ -97,7 +112,6 @@ function getIncrementalVersionSpaceTag(version: string, rolling: IIncrementalUpd
 
 async function incrementalUpgrade(env: IEnvironment, options) {
     // TODO: server side.
-
     const incrolling = env.rolling as IIncrementalUpdate;
 
     // Clone master to new deployment
@@ -115,7 +129,7 @@ async function incrementalUpgrade(env: IEnvironment, options) {
 
     await clone(masterProps, newestProps);
 
-    // Update assets in active environment to point to master
+    // Update assets in active environment to point to newest
     const activeVars = { ...env.variables, BLUEMIX_SPACE: { value: resolveSpace(env.name, env.variables, '') } };
     const activeWskFile = await prepareWskprops(activeVars, false);
     const activeProps = parser.read(activeWskFile);
@@ -127,5 +141,36 @@ async function incrementalUpgrade(env: IEnvironment, options) {
 
     // commit
     incrolling.versions.push(newest);
+    incrolling.version = newest;
+    persistEnvironment(env);
+}
+
+async function incrementalDowngrade(env: IEnvironment) {
+    // TODO: server side.
+    const incrolling = env.rolling as IIncrementalUpdate;
+
+    const count = incrolling.versions.length;
+    if (count < 2)
+        throw new Error('no available previous deployments');
+
+    const latest = count > 0 ? incrolling.versions[count - 1] : '0.0.1';
+    const previous = incrolling.versions[count - 2];
+
+    // Update assets in active environment to point to previous
+    const previousVars = { ...env.variables, BLUEMIX_SPACE: { value: resolveSpace(env.name, env.variables, previous) } };
+    const previousWskFile = await prepareWskprops(previousVars, false);
+    const previousProps = parser.read(previousWskFile);
+
+    const activeVars = { ...env.variables, BLUEMIX_SPACE: { value: resolveSpace(env.name, env.variables, '') } };
+    const activeWskFile = await prepareWskprops(activeVars, false);
+    const activeProps = parser.read(activeWskFile);
+
+    previousProps.NAMESPACE = `${previousProps.BLUEMIX_ORG.value}_${previousProps.BLUEMIX_SPACE.value}`;
+    debug(`downgrade to ${previousProps.NAMESPACE}`);
+
+    await reroute(activeProps, previousProps);
+
+    // commit
+    incrolling.version = previous;
     persistEnvironment(env);
 }
