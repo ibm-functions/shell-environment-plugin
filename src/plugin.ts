@@ -17,9 +17,11 @@ import { syncEnvName } from './lib/ui';
 import { getCurrentEnvironment } from './lib/store';
 import { setEnvironment } from './lib/environment';
 
+declare const ui: any;
+
 // preloading hook.
 function init(commandTree, prequire) {
-    if (typeof document === 'undefined') return;
+    if (typeof ui.headless === 'undefined' || ui.headless) return;
 
     const ns = document.getElementById('openwhisk-namespace');
     if (ns) {
