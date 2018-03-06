@@ -94,7 +94,7 @@ export async function downgrade(env: IEnvironment) {
     }
 }
 
-export const prettyRollingUpdate = ['none', 'incremental'];
+export const prettyRollingUpdate = ['direct', 'incremental'];
 
 // Incremental rolling update
 
@@ -151,7 +151,7 @@ async function incrementalDowngrade(env: IEnvironment) {
 
     const count = incrolling.versions.length;
     if (count < 2)
-        throw new Error('no available previous deployments');
+        throw new Error('no previous deployments available');
 
     const latest = count > 0 ? incrolling.versions[count - 1] : '0.0.1';
     const previous = incrolling.versions[count - 2];

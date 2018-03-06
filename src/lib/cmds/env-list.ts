@@ -18,6 +18,8 @@ import { sliceCmd } from './cli';
 import { getEnvironments, IEnvironments } from '../store';
 import { prettyRollingUpdate } from '../rolling';
 
+declare const repl;
+
 const usage = {
     title: 'List environments',
     header: '',
@@ -39,9 +41,12 @@ function formatForShell(envs: IEnvironments) {
     return Object.keys(envs).map(k => {
         const v = envs[k];
         return {
-            name: v.name, type: 'env', attributes: [
+            name: v.name,
+            type: 'env',
+            onclick: () => repl.pexec(`env set ${k}`),
+            attributes: [
                 {
-                    value: document.createTextNode(v.rolling ? prettyRollingUpdate[v.rolling.kind] : 'in-place'),
+                    value: document.createTextNode(v.rolling ? prettyRollingUpdate[v.rolling.kind] : 'direct'),
                     css: 'green-text'
                 }]
         };
