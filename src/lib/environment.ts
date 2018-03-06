@@ -15,7 +15,7 @@
  */
 
 import * as parser from 'properties-parser';
-import { syncEnvName } from "./ui";
+import { syncEnvName, ConnectionState } from "./ui";
 import { setCurrentEnvironment, getCurrentEnvironment, IEnvironment, IVariables, persistEnvironment, IVariable, getEnvironments } from "./store";
 import { prepareWskprops, escapeNamespace } from "./bluemix";
 import { newIncrementalRollingStrategy, checkVersionTag, getVersionSpaceTag } from './rolling';
@@ -32,26 +32,33 @@ export class ErrorMissingVariable extends Error {
 }
 
 export async function setEnvironment(wsk, name: string, version: string) {
-    // Update global .wskprops
-    const env = getEnvironments()[name];
-    checkVersionTag(env, version);
-
-    env.version = version;
-    persistEnvironment(env);
-
-    const bxspace = resolveSpace(env.name, env.variables, getVersionSpaceTag(env));
-    setVar(env, 'BLUEMIX_SPACE', { value: bxspace, iscomputed: true });
-
-    const wskpropsfile = await prepareWskprops(env.variables, true);
-
-    // Refresh OW client.
-    await initOW(wsk, env, wskpropsfile);
-
-    // Update store
-    setCurrentEnvironment(name);
-
     // Update UI
-    syncEnvName();
+    syncEnvName(ConnectionState.CONNECTING);
+
+    try {
+        // Update store
+        setCurrentEnvironment(name);
+
+        // Update global .wskprops. This takes time.
+        const env = getEnvironments()[name];
+        checkVersionTag(env, version);
+
+        env.version = version;
+        persistEnvironment(env);
+
+        const bxspace = resolveSpace(env.name, env.variables, getVersionSpaceTag(env));
+        setVar(env, 'BLUEMIX_SPACE', { value: bxspace, iscomputed: true });
+
+        const wskpropsfile = await prepareWskprops(env.variables, true);
+
+        // Refresh OW client.
+        await initOW(wsk, env, wskpropsfile);
+
+        syncEnvName(ConnectionState.CONNECTED);
+    } catch (e) {
+        syncEnvName(ConnectionState.DISCONNECTED);
+        throw e;
+    }
 }
 
 // Initialize OW client. Involved rolling update strategy as needed.

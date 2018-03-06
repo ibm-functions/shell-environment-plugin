@@ -15,9 +15,23 @@
  */
 import { getCurrentEnvironment } from './store';
 
-export function syncEnvName() {
+export enum ConnectionState { CONNECTING, CONNECTED, DISCONNECTED }
+
+export function syncEnvName(state: ConnectionState) {
     const nameElem = document.getElementById('openwhisk-namespace');
     const env = getCurrentEnvironment() || { name: 'no environment', version: 'master' };
     const version = (env.version && env.version !== 'active') ? `@${env.version}` : '';
     nameElem.childNodes[0].textContent = `${env.name}${version}`;
+
+    switch (state) {
+        case ConnectionState.CONNECTING:
+            nameElem.className = 'environment-connecting';
+            break;
+        case ConnectionState.CONNECTED:
+            nameElem.className = 'environment-connected';
+            break;
+        case ConnectionState.DISCONNECTED:
+        default:
+            nameElem.className = 'environment-disconnected';
+    }
 }

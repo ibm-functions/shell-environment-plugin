@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { syncEnvName } from './lib/ui';
 import { getCurrentEnvironment } from './lib/store';
 import { setEnvironment } from './lib/environment';
+import { join } from 'path';
 
 declare const ui: any;
 
 // preloading hook.
 function init(commandTree, prequire) {
-    if (typeof ui.headless === 'undefined' || ui.headless) return;
+    // if (typeof ui.headless === 'undefined' || ui.headless) return;
 
     const ns = document.getElementById('openwhisk-namespace');
     if (ns) {
@@ -29,21 +29,21 @@ function init(commandTree, prequire) {
         ns.setAttribute('onclick', 'repl.partial("env set <your_env_name>")');
     }
 
-    // syncEnvName();
     const current = getCurrentEnvironment();
     if (current && current.name) {
         try {
             const wsk = prequire('/ui/commands/openwhisk-core');
-            setEnvironment(wsk, current.name, current.version || 'latest');
+            setEnvironment(wsk, current.name, current.version || 'master');
         } catch (e) {
             throw e;
         }
     }
+
+    ui.injectCSS(join(__dirname, '..', 'resources', 'env.css'));
 }
 
 module.exports = (commandTree, prequire) => {
     require('./lib/cmds/env')(commandTree, prequire);
-    require('./lib/cmds/rollout')(commandTree, prequire);
 
     init(commandTree, prequire);
 
