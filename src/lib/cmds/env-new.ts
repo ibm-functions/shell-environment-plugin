@@ -14,15 +14,17 @@
  * limitations under the License.
  */
 import { error, sliceCmd, checkExtraneous } from './cli';
-import { docNew } from './docs';
 import { newEnvironment, StoreKind } from '../store';
 
-const usage = `${docNew}
-
-\tenv new <name>
-
-Required parameters:
-\t<name>               the environment name`;
+const usage = {
+    title: 'Create a new environment',
+    header: '',
+    prefix: 'env new',
+    example: 'env new <name>',
+    required: [
+        { name: 'name', docs: 'the environment name' }
+    ]
+};
 
 const doNew = async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
     if (argv.help)
@@ -32,12 +34,12 @@ const doNew = async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
 
     const name: string = argv._.shift();
     if (!name)
-        error(errors, 'missing environment name');
+        throw new errors.usage(usage);
 
     newEnvironment(name, StoreKind.LOCAL);
     return `environment ${name} created.`;
 };
 
 module.exports = (commandTree, _) => {
-    commandTree.listen('/env/new', doNew, { docs: docNew });
+    commandTree.listen('/env/new', doNew, { usage });
 };

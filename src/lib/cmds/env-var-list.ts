@@ -13,11 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { docVarList } from './docs';
 import { getCurrentEnvironmentOrError, sliceCmd, error } from './cli';
 import { IEnvironment } from '../store';
 
-const usage = docVarList;
+const usage = {
+    title: 'List environment variables',
+    header: '',
+    prefix: 'env var list',
+    example: 'env var list'
+};
 
 const doVarList = async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
     if (argv.help)
@@ -46,5 +50,5 @@ function formatForShell(env: IEnvironment) {
 }
 
 module.exports = (commandTree, require) => {
-    commandTree.listen('/env/var/list', doVarList, { docs: doVarList });
+    commandTree.listen('/env/var/list', doVarList, { usage });
 };

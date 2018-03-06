@@ -14,12 +14,16 @@
  * limitations under the License.
  */
 import * as fs from 'fs-extra';
-import { docList } from './docs';
 import { sliceCmd } from './cli';
 import { getEnvironments, IEnvironments } from '../store';
 import { prettyRollingUpdate } from '../rolling';
 
-const usage = docList;
+const usage = {
+    title: 'List environments',
+    header: '',
+    prefix: 'env list',
+    example: 'env list'
+};
 
 const doList = cmd => async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
     if (argv.help)
@@ -34,16 +38,17 @@ const doList = cmd => async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
 function formatForShell(envs: IEnvironments) {
     return Object.keys(envs).map(k => {
         const v = envs[k];
-        return { name: v.name, type: 'env', attributes: [
-            {
-                value: document.createTextNode(v.rolling ? prettyRollingUpdate[v.rolling.kind] : 'in-place'),
-                css: 'green-text'
-            }]
+        return {
+            name: v.name, type: 'env', attributes: [
+                {
+                    value: document.createTextNode(v.rolling ? prettyRollingUpdate[v.rolling.kind] : 'in-place'),
+                    css: 'green-text'
+                }]
         };
     });
 }
 
 module.exports = (commandTree, require) => {
-    const cmd = commandTree.listen('/env/list', doList('list'), { docs: docList });
+    const cmd = commandTree.listen('/env/list', doList('list'), { usage });
     commandTree.synonym('/env/ls', doList('ls'), cmd);
 };

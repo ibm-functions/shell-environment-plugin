@@ -13,13 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { docVarSet } from './docs';
 import { sliceCmd, error } from './cli';
 import { persistEnvironment, getCurrentEnvironment } from '../store';
 
-const usage = `${docVarSet}
-
-\tenv var set <variable_name> <variable_value>`;
+const usage = {
+    title: 'Set the value of a variable in the current environment',
+    header: '',
+    prefix: 'env set',
+    example: 'env var set <variable_name> <variable_value>',
+    required: [
+        { name: '<variable_name>', docs: 'the name of the variable to set' },
+        { name: '<variable_value>', docs: 'the variable string value' }
+    ]
+};
 
 const doVarSet = async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
     if (argv.help)
@@ -29,11 +35,11 @@ const doVarSet = async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
 
     const name = argv._.shift();
     if (!name)
-        error(errors, 'missing variable name', usage);
+        throw new errors.usage(usage);
 
     const value = argv._.shift();
     if (!value)
-        error(errors, 'missing variable value', usage);
+        throw new errors.usage(usage);
 
     const env = getCurrentEnvironment();
     if (!env)
@@ -46,5 +52,5 @@ const doVarSet = async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
 };
 
 module.exports = (commandTree, require) => {
-    commandTree.listen('/env/var/set', doVarSet, { docs: docVarSet });
+    commandTree.listen('/env/var/set', doVarSet, { usage });
 };

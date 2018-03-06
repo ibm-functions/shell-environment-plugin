@@ -13,14 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { docVarDelete } from './docs';
 import { sliceCmd, error } from './cli';
 import { persistEnvironment, getCurrentEnvironment } from '../store';
 import { deleteVar } from '../environment';
 
-const usage = `${docVarDelete}
-
-\tenv var delete <variable_name>`;
+const usage = {
+    title: 'Delete a variable from the current environment',
+    header: '',
+    prefix: 'env var delete',
+    example: 'env var delete <variable_name>',
+    required: [
+        { name: '<variable_name>', docs: 'the variable name to delete' }
+    ]
+};
 
 const doVarDelete = async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
     if (argv.help)
@@ -30,7 +35,7 @@ const doVarDelete = async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
 
     const name = argv._.shift();
     if (!name)
-        error(errors, 'missing variable name', usage);
+        throw new errors.usage(usage);
 
     const env = getCurrentEnvironment();
     if (!env)
@@ -41,5 +46,5 @@ const doVarDelete = async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
 };
 
 module.exports = (commandTree, require) => {
-    commandTree.listen('/env/var/delete', doVarDelete, { docs: docVarDelete });
+    commandTree.listen('/env/var/delete', doVarDelete, { usage });
 };

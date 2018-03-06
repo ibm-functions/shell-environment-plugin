@@ -13,25 +13,66 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import * as docs from './docs';
 
-const usage = `${docs.docEnv}
-\tenv new                          [ ${docs.docNew} ]
-\tenv set                          [ ${docs.docSet} ]
-\tenv show                         [ ${docs.docShow} ]
-\tenv list                         [ ${docs.docList} ]
-\tenv var                          [ ${docs.docVar} ]`;
+const usage = {
+    title: 'Environment management operations',
+    header: 'These commands will help you manage multiple deployment environments',
+    example: 'env <command>',
+    commandPrefix: 'env',
+    available: [
+        { command: 'new', docs: 'Create a new environment' },
+        { command: 'set', docs: 'Set the current environment' },
+        { command: 'show', docs: 'Show information about the current environment' },
+        { command: 'list', docs: 'List environments' },
+        { command: 'var', docs: 'Environment variable management operations' },
+        { command: 'rollout', docs: 'Environment rollout operations' }
+    ],
+    related: []
+};
 
-const doEnv = async (_1, _2, _3, modules, _4, _5, _6, argv) => {
-    throw new modules.errors.usage(usage);
+const usageVars = {
+    title: 'Environment variable management operations',
+    header: 'These commands will help you manage environment variables',
+    example: 'env var <command>',
+    commandPrefix: 'env var',
+    available: [
+        { command: 'set', docs: 'Set the value of a variable in the current environment' },
+        { command: 'delete', docs: 'Delete a variable from the current environment' },
+        { command: 'list', docs: 'List environment variables' }
+    ],
+    related: []
+};
+
+const usageRollout = {
+    title: 'Environment rollout operations',
+    header: 'These commands will help you rollout new version of your assets',
+    example: 'env rollout <command>',
+    commandPrefix: 'env rollout',
+    available: [
+        { command: 'enable', docs: 'Enable rollout deployment for the current environment' },
+        { command: 'upgrade', docs: 'Upgrade active deployment to latest version' },
+        { command: 'rollback', docs: 'Rollback to previously deployed version' }
+    ],
+    related: []
 };
 
 module.exports = (commandTree, prequire) => {
-    commandTree.listen('/env', doEnv, { docs: docs.docEnv });
+    commandTree.subtree('/env', { usage });
 
     require('./env-list')(commandTree, prequire);
     require('./env-set')(commandTree, prequire);
     require('./env-show')(commandTree, prequire);
     require('./env-new')(commandTree, prequire);
-    require('./env-var')(commandTree, prequire);
+
+    commandTree.subtree('/env/var', { usage: usageVars });
+
+    require('./env-var-set')(commandTree, prequire);
+    require('./env-var-list')(commandTree, prequire);
+    require('./env-var-delete')(commandTree, prequire);
+
+    commandTree.subtree('/env/rollout', { usage: usageRollout });
+
+    require('./rollout-enable')(commandTree, prequire);
+    require('./rollout-upgrade')(commandTree, prequire);
+    require('./rollout-rollback')(commandTree, prequire);
 };

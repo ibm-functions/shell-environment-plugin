@@ -15,12 +15,16 @@
  * limitations under the License.
  */
 import { getCurrentEnvironmentOrError } from './cli';
-import { docRolloutRollback } from './docs';
 import { downgrade } from '../rolling';
 
-const usage = docRolloutRollback;
+const usage = {
+    title: 'Rollback to previously deployed version',
+    header: '',
+    example: 'rollback',
+    optional: []
+};
 
-const doRolloutUpgrade = async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
+const doRolloutRollback = async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
     if (argv.help)
         throw new errors.usage(usage);
 
@@ -30,5 +34,5 @@ const doRolloutUpgrade = async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
 };
 
 module.exports = (commandTree, prequire) => {
-    commandTree.listen('/rollout/rollback', docRolloutRollback, { docs: docRolloutRollback });
+    commandTree.listen('/env/rollout/rollback', doRolloutRollback, { usage });
 };

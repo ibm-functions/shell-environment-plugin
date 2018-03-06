@@ -15,17 +15,18 @@
  * limitations under the License.
  */
 import { error, sliceCmd, checkExtraneous, consume, getCurrentEnvironmentOrError } from './cli';
-import { docRolloutUpgrade } from './docs';
 import { upgrade } from '../rolling';
 
-const usage = `${docRolloutUpgrade}
-
-\trollout enable [--major|--minor|--patch]
-
-Optional parameters:
-\t--major               increase major version. Reset minor and patch versions.
-\t--minor               increase minor version. Reset patch version.
-\t--patch               increase patch version.`;
+const usage = {
+    title: 'Upgrade active deployment to latest version',
+    header: '',
+    example: 'upgrade [--major|--minor|--patch]',
+    optional: [
+        { name: '--major', docs: 'increase major version. Reset minor and patch versions' },
+        { name: '--minor', docs: 'increase minor version. Reset patch version.' },
+        { name: '--patch', docs: 'increase patch version' }
+    ]
+};
 
 const doRolloutUpgrade = async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
     if (argv.help)
@@ -59,5 +60,5 @@ const doRolloutUpgrade = async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
 };
 
 module.exports = (commandTree, prequire) => {
-    commandTree.listen('/rollout/upgrade', doRolloutUpgrade, { docs: docRolloutUpgrade });
+    commandTree.listen('/env/rollout/upgrade', doRolloutUpgrade, { usage });
 };

@@ -15,13 +15,14 @@
  * limitations under the License.
  */
 import { error, sliceCmd, checkExtraneous, consume, getCurrentEnvironmentOrError } from './cli';
-import { docRolloutEnable } from './docs';
 import { enableIncRollout } from '../environment';
 
-const usage = docRolloutEnable;
-// `${docRolloutEnable}
-
-// \trollout enable`;
+const usage = {
+    title: 'Enable rollout deployment for the current environment',
+    header: '',
+    example: 'enable',
+    optional: []
+};
 
 const doRolloutEnable = wsk =>  async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
     if (argv.help)
@@ -32,14 +33,12 @@ const doRolloutEnable = wsk =>  async (_1, _2, _3, { errors }, _4, _5, _6, argv)
     // const bluegreen = consume(argv, ['bluegreen']);
 
     const env = getCurrentEnvironmentOrError(errors);
-    // if (bluegreen) {
     await enableIncRollout(wsk, env);
-    // }
 
     return true;
 };
 
 module.exports = (commandTree, prequire) => {
     const wsk = prequire('/ui/commands/openwhisk-core');
-    commandTree.listen('/rollout/enable', doRolloutEnable(wsk), { docs: docRolloutEnable });
+    commandTree.listen('/env/rollout/enable', doRolloutEnable(wsk), { usage });
 };

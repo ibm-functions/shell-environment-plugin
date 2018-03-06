@@ -13,19 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { docSet } from './docs';
-import { sliceCmd, error } from './cli';
+import { sliceCmd, error, consume } from './cli';
 import { getEnvironments, setCurrentEnvironment, getCurrentEnvironment } from '../store';
 import { setEnvironment, ErrorMissingVariable } from '../environment';
 
-let wsk;
+declare const wsk;
 
-const usage = `${docSet}
-
-\tenv set <env>[@<version>]
-
-Required parameters:
-\tenv            the environment name optionally followed by a version`;
+const usage = {
+    title: 'Set the current environment',
+    header: '',
+    prefix: 'env set',
+    example: 'env set <name> [-v|--version <version>]',
+    required: [
+        { name: 'name', docs: 'the environment name' }
+    ],
+    optional: [
+        { name: '-v|--version', docs: 'the deployment version corresponding to the environment. Default is master' }
+    ]
+};
 
 const doSet = wsk => async (_1, _2, _3, { ui, errors }, _4, _5, _6, argv) => {
     if (argv.help)
@@ -33,12 +38,11 @@ const doSet = wsk => async (_1, _2, _3, { ui, errors }, _4, _5, _6, argv) => {
 
     sliceCmd(argv, 'set');
 
-    const qname = argv._.shift();
-    if (!qname)
-        throw new errors.usage(`expected environment name.\n\n${usage}`);
+    const name = argv._.shift();
+    if (!name)
+        throw new errors.usage(usage);
 
-    let [name, version] = qname.split('@');
-    version = version || 'master';
+    const version = consume(argv, ['v', 'version']) || 'master';
 
     const envs = getEnvironments();
     if (!envs[name])
@@ -67,5 +71,5 @@ function errorMissingVar(name: string) {
 module.exports = (commandTree, prequire) => {
     const wsk = prequire('/ui/commands/openwhisk-core');
 
-    commandTree.listen('/env/set', doSet(wsk), { docs: docSet });
+    commandTree.listen('/env/set', doSet(wsk), { usage });
 };

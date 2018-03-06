@@ -14,12 +14,16 @@
  * limitations under the License.
  */
 import * as fs from 'fs-extra';
-import * as env from './env';
-import { docShow } from './docs';
+import * as env from '../environment';
 import { sliceCmd } from './cli';
 import { getCurrentEnvironment, IEnvironment } from '../store';
 
-const usage = docShow;
+const usage = {
+    title: 'Show information about the current environment',
+    header: '',
+    prefix: 'env show',
+    example: 'env show'
+};
 
 const doShow = async (_1, _2, _3, { errors }, _4, _5, _6, argv) => {
     if (argv.help)
@@ -54,5 +58,5 @@ function formatForShell(env: IEnvironment) {
 }
 
 module.exports = (commandTree, require) => {
-    commandTree.listen('/env/show', doShow, { docs: docShow });
+    commandTree.listen('/env/show', doShow, { usage });
 };
